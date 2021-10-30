@@ -52,14 +52,15 @@ async function fetchRecipes() {
           })
           // check if we get a proper response (still resolves even with 404)
           .then(response => { 
-            if (response.status !== 200) {
+            if (!response.ok) {
+              console.log('response not 200')
               reject();
-            } else {
-              return response.json();
-            }
+            } 
+            return response.json();
           })
           // add the data (we'll process it in RecipeCard.js, i hope) 
           .then(data => {
+            console.log(data);
             recipeData.recipes = [];
             recipeData.recipes.push(data);
           })
@@ -68,7 +69,7 @@ async function fetchRecipes() {
 
     // resolve once all promises are resolved
     Promise.all(promises)
-      .then(()=>resolve())
+      .then(() => resolve(true))
       .catch((error)=> {
         console.log(error);
         reject();
