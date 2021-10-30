@@ -39,6 +39,43 @@ async function fetchRecipes() {
     // callback function to resolve this promise. If there's any error fetching any of the items, call
     // the reject(false) function.
 
+    let promises = []; // keep track of each promise we make fetching the urls
+
+    recipeData.recipes = [];
+
+    recipes.forEach(url => {
+      // add each fetch promise to the array
+      promises.push(
+        fetch(url)
+          // catch any errors in fetching (network connection)
+          .catch(error => { 
+            console.log(error);
+            reject();
+          })
+          // check if we get a proper response (still resolves even with 404)
+          .then(response => { 
+            if (!response.ok) {
+              console.log('response not 200')
+              reject();
+            } 
+            return response.json();
+          })
+          // add the data (we'll process it later) 
+          .then(data => {
+            //console.log(data);
+            recipeData.recipes.push(data);
+          })
+      );
+    });
+
+    // resolve once all promises are resolved
+    Promise.all(promises)
+      .then(() => resolve(true))
+      .catch((error)=> {
+        console.log(error);
+        reject();
+      });
+
     // For part 2 - note that you can fetch local files as well, so store any JSON files you'd like to fetch
     // in the recipes folder and fetch them from there. You'll need to add their paths to the recipes array.
 
@@ -54,6 +91,12 @@ function createRecipeCards() {
   // show any others you've added when the user clicks on the "Show more" button.
 
   // Part 1 Expose - TODO
+  const main = document.querySelector('main');
+  recipeData.recipes.forEach(recipeInfo => {
+    const newCard = document.createElement('recipe-card');
+    newCard.data = recipeInfo;
+    main.appendChild(newCard);
+  })
 }
 
 function bindShowMore() {

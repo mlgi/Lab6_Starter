@@ -3,6 +3,8 @@ class RecipeCard extends HTMLElement {
     // Part 1 Expose - TODO
 
     // You'll want to attach the shadow DOM here
+    super();
+    let shadow = this.attachShadow({mode: 'open'});
   }
 
   set data(data) {
@@ -100,6 +102,111 @@ class RecipeCard extends HTMLElement {
     // created in the constructor()
 
     // Part 1 Expose - TODO
+
+    let cleanData = {};
+    /* 
+     * cleanData should have
+     * cleanData.thumbnail - link to the photo of recipe
+     * cleanData.title - title of the recipe
+     * cleanData.url - url for the recipe
+     * cleanData.organization - organization of the recipe
+     * cleanData.time - cook time of the recipe
+     * cleanData.ingredients - string of ingredients
+     * 
+     * cleanData.rating is optional and should be
+     * rating.score - review score out of 5
+     * rating.count - number of reviews
+     */
+
+    // process raw data into cleanData
+    cleanData.thumbnail = searchForKey(data,'thumbnailUrl');
+    cleanData.title = getRecipeTitle(data);
+    cleanData.url = getUrl(data);
+    cleanData.organization = getOrganization(data);
+    cleanData.time = convertTime(searchForKey(data,'cookTime'));
+    cleanData.ingredients = createIngredientList(searchForKey(data,'recipeIngredient'));
+    let tempRating = searchForKey(data,'aggregateRating');
+    if (tempRating) {
+      cleanData.rating = {
+        count: tempRating.ratingCount,
+        score: tempRating.ratingValue
+      }
+    }
+
+    // create card from cleanData
+    const picture = document.createElement('img');
+    picture.setAttribute('src', cleanData.thumbnail);
+    picture.setAttribute('alt', cleanData.title);
+    card.appendChild(picture);
+    
+    const title = document.createElement('p');
+    title.classList.add('title');
+    const titleLink = document.createElement('a');
+    titleLink.setAttribute('href', cleanData.url);
+    titleLink.textContent = cleanData.title;
+    title.appendChild(titleLink);
+    card.appendChild(title);
+
+    const organization = document.createElement('p');
+    organization.classList.add('organization');
+    organization.textContent = cleanData.organization;
+    card.appendChild(organization);
+
+    const rating = document.createElement('div');
+    rating.classList.add('rating');
+    if ("rating" in cleanData) {
+      const span = document.createElement('span');
+      span.textContent = cleanData.rating.score;
+      rating.appendChild(span);
+
+      const stars = document.createElement('img');
+      switch(Math.round(cleanData.rating.score)) {
+        case 5:
+          stars.setAttribute('src', 'assets/images/icons/5-star.svg');
+          stars.setAttribute('alt', '5 stars');
+          break;
+        case 4:
+          stars.setAttribute('src', 'assets/images/icons/4-star.svg');
+          stars.setAttribute('alt', '4 stars');
+        case 3:
+          stars.setAttribute('src', 'assets/images/icons/3-star.svg');
+          stars.setAttribute('alt', '3 stars');
+          break;
+        case 2:
+          stars.setAttribute('src', 'assets/images/icons/2-star.svg');
+          stars.setAttribute('alt', '2 stars');
+        case 1:
+          stars.setAttribute('src', 'assets/images/icons/1-star.svg');
+          stars.setAttribute('alt', '1 stars');
+          break;
+        case 0:
+          stars.setAttribute('src', 'assets/images/icons/0-star.svg');
+          stars.setAttribute('alt', '0 stars');
+          break;
+      }
+      rating.appendChild(stars);
+
+      const reviewCount = document.createElement('span');
+      reviewCount.textContent = '('+cleanData.rating.count+')';
+      rating.appendChild(reviewCount);
+    } else {
+      const span = document.createElement('span');
+      span.textContent = 'No Reviews';
+      rating.appendChild(span);
+    }
+    card.appendChild(rating);
+
+    const time = document.createElement('time');
+    time.textContent = cleanData.time;
+    card.appendChild(time);
+
+    const ingredients = document.createElement('p');
+    ingredients.classList.add('ingredients');
+    ingredients.textContent = cleanData.ingredients;
+    card.appendChild(ingredients);
+    
+    this.shadowRoot.appendChild(styleElem);
+    this.shadowRoot.appendChild(card);
   }
 }
 
@@ -162,6 +269,24 @@ function getOrganization(data) {
     }
   };
   return null;
+}
+
+/**
+ * Similar to getOrganization(), this extracts recipe name from raw JSON
+ * @param {Object} Data Raw recipe JSON to find name of
+ * @returns {String} if found, returns the name of recipe as string, otherwise null
+ */
+function getRecipeTitle(data) {
+  if (data.name) return data.name;
+  let value = null;
+  if (data['@graph']) {
+    data['@graph'].forEach((obj) => {
+      if (obj['@type'] == 'Recipe') {
+        value = obj['name'];
+      }
+    });
+  }
+  return value;
 }
 
 /**
