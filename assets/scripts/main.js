@@ -58,7 +58,7 @@ async function fetchRecipes() {
             } 
             return response.json();
           })
-          // add the data (we'll process it in RecipeCard.js, i hope) 
+          // add the data (we'll process it later) 
           .then(data => {
             console.log(data);
             recipeData.recipes = [];
