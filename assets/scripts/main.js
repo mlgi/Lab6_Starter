@@ -39,6 +39,41 @@ async function fetchRecipes() {
     // callback function to resolve this promise. If there's any error fetching any of the items, call
     // the reject(false) function.
 
+    let promises = []; // keep track of each promise we make fetching the urls
+
+    recipes.forEach(url => {
+      // add each fetch promise to the array
+      promises.push(
+        fetch(url)
+          // catch any errors in fetching (network connection)
+          .catch(error => { 
+            console.log(error);
+            reject();
+          })
+          // check if we get a proper response (still resolves even with 404)
+          .then(response => { 
+            if (response.status !== 200) {
+              reject();
+            } else {
+              return response.json();
+            }
+          })
+          // add the data (we'll process it in RecipeCard.js, i hope) 
+          .then(data => {
+            recipeData.recipes = [];
+            recipeData.recipes.push(data);
+          })
+      );
+    });
+
+    // resolve once all promises are resolved
+    Promise.all(promises)
+      .then(()=>resolve())
+      .catch((error)=> {
+        console.log(error);
+        reject();
+      });
+
     // For part 2 - note that you can fetch local files as well, so store any JSON files you'd like to fetch
     // in the recipes folder and fetch them from there. You'll need to add their paths to the recipes array.
 
