@@ -41,6 +41,8 @@ async function fetchRecipes() {
 
     let promises = []; // keep track of each promise we make fetching the urls
 
+    recipeData.recipes = [];
+
     recipes.forEach(url => {
       // add each fetch promise to the array
       promises.push(
@@ -60,8 +62,7 @@ async function fetchRecipes() {
           })
           // add the data (we'll process it later) 
           .then(data => {
-            console.log(data);
-            recipeData.recipes = [];
+            //console.log(data);
             recipeData.recipes.push(data);
           })
       );
@@ -90,6 +91,12 @@ function createRecipeCards() {
   // show any others you've added when the user clicks on the "Show more" button.
 
   // Part 1 Expose - TODO
+  const main = document.querySelector('main');
+  recipeData.recipes.forEach(recipeInfo => {
+    const newCard = document.createElement('recipe-card');
+    newCard.data = recipeInfo;
+    main.appendChild(newCard);
+  })
 }
 
 function bindShowMore() {

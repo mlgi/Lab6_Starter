@@ -4,7 +4,7 @@ class RecipeCard extends HTMLElement {
 
     // You'll want to attach the shadow DOM here
     super();
-    let shadow = this.attachShadow({mode: 'closed'});
+    let shadow = this.attachShadow({mode: 'open'});
   }
 
   set data(data) {
@@ -111,13 +111,29 @@ class RecipeCard extends HTMLElement {
      * cleanData.url - url for the recipe
      * cleanData.organization - organization of the recipe
      * cleanData.time - cook time of the recipe
-     * cleanData.ingredients[] - list of ingredients
+     * cleanData.ingredients - string of ingredients
      * 
      * cleanData.rating is optional and should be
      * rating.score - review score out of 5
      * rating.count - number of reviews
      */
 
+    // process raw data into cleanData
+    cleanData.thumbnail = searchForKey(data,'thumbnailUrl');
+    cleanData.title = getRecipeTitle(data);
+    cleanData.url = getUrl(data);
+    cleanData.organization = getOrganization(data);
+    cleanData.time = convertTime(searchForKey(data,'cookTime'));
+    cleanData.ingredients = createIngredientList(searchForKey(data,'recipeIngredient'));
+    let tempRating = searchForKey(data,'aggregateRating');
+    if (tempRating) {
+      cleanData.rating = {
+        count: tempRating.ratingCount,
+        score: tempRating.ratingValue
+      }
+    }
+
+    // create card from cleanData
     const picture = document.createElement('img');
     picture.setAttribute('src', cleanData.thumbnail);
     picture.setAttribute('alt', cleanData.title);
@@ -134,16 +150,17 @@ class RecipeCard extends HTMLElement {
     const organization = document.createElement('p');
     organization.classList.add('organization');
     organization.textContent = cleanData.organization;
-    card.appendChild('organization');
+    card.appendChild(organization);
 
     const rating = document.createElement('div');
+    rating.classList.add('rating');
     if ("rating" in cleanData) {
       const span = document.createElement('span');
       span.textContent = cleanData.rating.score;
       rating.appendChild(span);
 
       const stars = document.createElement('img');
-      switch(cleanData.rating.score) {
+      switch(Math.round(cleanData.rating.score)) {
         case 5:
           stars.setAttribute('src', 'assets/images/icons/5-star.svg');
           stars.setAttribute('alt', '5 stars');
@@ -170,7 +187,7 @@ class RecipeCard extends HTMLElement {
       rating.appendChild(stars);
 
       const reviewCount = document.createElement('span');
-      reviewCount.textContent('('+cleanData.rating.count+')');
+      reviewCount.textContent = '('+cleanData.rating.count+')';
       rating.appendChild(reviewCount);
     } else {
       const span = document.createElement('span');
@@ -185,12 +202,11 @@ class RecipeCard extends HTMLElement {
 
     const ingredients = document.createElement('p');
     ingredients.classList.add('ingredients');
-    for (let i = 0; i < cleanData.ingredients.length - 1; i++) {
-      ingredients.textContent += cleanData.ingredients[i] + ', ';
-    }
-    ingredients.textContent += cleanData.ingredients[cleanData.ingredients.length - 1];
+    ingredients.textContent = cleanData.ingredients;
     card.appendChild(ingredients);
     
+    this.shadowRoot.appendChild(styleElem);
+    this.shadowRoot.appendChild(card);
   }
 }
 
@@ -253,6 +269,24 @@ function getOrganization(data) {
     }
   };
   return null;
+}
+
+/**
+ * Similar to getOrganization(), this extracts recipe name from raw JSON
+ * @param {Object} Data Raw recipe JSON to find name of
+ * @returns {String} if found, returns the name of recipe as string, otherwise null
+ */
+function getRecipeTitle(data) {
+  if (data.name) return data.name;
+  let value = null;
+  if (data['@graph']) {
+    data['@graph'].forEach((obj) => {
+      if (obj['@type'] == 'Recipe') {
+        value = obj['name'];
+      }
+    });
+  }
+  return value;
 }
 
 /**
