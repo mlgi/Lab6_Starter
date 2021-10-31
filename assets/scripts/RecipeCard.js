@@ -123,7 +123,9 @@ class RecipeCard extends HTMLElement {
     cleanData.title = getRecipeTitle(data);
     cleanData.url = getUrl(data);
     cleanData.organization = getOrganization(data);
-    cleanData.time = convertTime(searchForKey(data,'cookTime'));
+    let tempTime = searchForKey(data,'cookTime');
+    if (!tempTime) tempTime = searchForKey(data,'totalTime');
+    cleanData.time = convertTime(tempTime);
     cleanData.ingredients = createIngredientList(searchForKey(data,'recipeIngredient'));
     let tempRating = searchForKey(data,'aggregateRating');
     if (tempRating) {

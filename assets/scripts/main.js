@@ -5,13 +5,16 @@
 const recipes = [
   'https://introweb.tech/assets/json/ghostCookies.json',
   'https://introweb.tech/assets/json/birthdayCake.json',
-  'https://introweb.tech/assets/json/chocolateChip.json'
+  'https://introweb.tech/assets/json/chocolateChip.json',
+  'assets/recipes/gyudon.json',
+  'assets/recipes/chicken_tortilla_soup.json',
+  'assets/recipes/chicken_n_dumplings.json'
 ];
 
 // Once all of the recipes that were specified above have been fetched, their
 // data will be added to this object below. You may use whatever you like for the
 // keys as long as it's unique, one suggestion might but the URL itself
-const recipeData = {}
+const recipeData = {};
 
 window.addEventListener('DOMContentLoaded', init);
 
@@ -91,12 +94,18 @@ function createRecipeCards() {
   // show any others you've added when the user clicks on the "Show more" button.
 
   // Part 1 Expose - TODO
+  console.log(recipeData);
   const main = document.querySelector('main');
-  recipeData.recipes.forEach(recipeInfo => {
+  for (let i = 0; i < recipeData.recipes.length; i++) {
+    let recipeInfo = recipeData.recipes[i];
     const newCard = document.createElement('recipe-card');
     newCard.data = recipeInfo;
     main.appendChild(newCard);
-  })
+  }
+}
+
+function toggleMoreCards(event) {
+  
 }
 
 function bindShowMore() {
@@ -108,4 +117,5 @@ function bindShowMore() {
   // in the recipeData object where you stored them/
 
   // Part 2 Explore - TODO
+
 }
